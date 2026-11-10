@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#03050d" />
+  <meta name="description" content="Laser Chess — a neon turn-based duel of mirrors, emitters and beams." />
+  <title>LASER CHESS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050b18'/%3E%3Cpath d='M13 48 L25 16 L38 48' stroke='%23ff355e' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M22 34 L50 34' stroke='%232fa9ff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <div class="topbar-side topbar-left">
+        <button id="menuBtn" class="ghost-btn" aria-label="MENU" title="Return to main menu">
+          <span class="glyph" aria-hidden="true">☰</span>
+          <span class="btn-label">MENU</span>
+        </button>
+        <div class="brand" aria-hidden="true">LASER<span>CHESS</span></div>
+      </div>
+
+      <div id="turnPill" class="turn-pill" data-turn="red" aria-live="polite">
+        <span class="turn-dot" aria-hidden="true"></span>
+        <span id="turnLabel">RED'S TURN</span>
+      </div>
+
+      <div class="topbar-side topbar-right">
+        <button id="soundBtn" class="ghost-btn compact" aria-label="Toggle sound" title="Toggle sound">
+          <span id="soundIcon" class="glyph" aria-hidden="true">♪</span>
+        </button>
+        <button id="restartBtn" class="ghost-btn" aria-label="RESTART" title="Restart match">
+          <span class="glyph" aria-hidden="true">↺</span>
+          <span class="btn-label">RESTART</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <section id="boardStage" class="board-stage" aria-label="Laser chess board">
+        <canvas id="gameCanvas"></canvas>
+        <div id="toast" class="toast" aria-live="polite"></div>
+      </section>
+
+      <aside class="control-panel" aria-label="Game controls">
+        <div class="turn-card">
+          <div class="panel-label">CURRENT TURN</div>
+          <div class="turn-name" id="turnName">RED</div>
+          <div class="turn-sub" id="turnSub">Select a piece, then fire.</div>
+          <div class="turn-bar"><span id="turnBarFill"></span></div>
+        </div>
+
+        <div class="selected-info" id="selectedInfo">
+          <div class="panel-label" id="infoKicker">NO PIECE SELECTED</div>
+          <div class="info-text" id="infoText">Tap one of your pieces to reveal its moves.</div>
+        </div>
+
+        <div class="actions">
+          <button id="rotateBtn" class="action-btn rotate-btn" disabled>
+            <span class="action-icon" aria-hidden="true">⟳</span>
+            <span class="action-copy">
+              <span class="action-label">ROTATE</span>
+              <span class="action-hint">90° · <kbd>R</kbd></span>
+            </span>
+          </button>
+          <button id="fireBtn" class="action-btn fire-btn" disabled>
+            <span class="fire-glow" aria-hidden="true"></span>
+            <span class="fire-copy">
+              <span class="fire-label">FIRE</span>
+              <span class="fire-sub">END TURN · <kbd>F</kbd></span>
+            </span>
+          </button>
+        </div>
+
+        <div class="legend">
+          <div class="panel-label">FIELD MANUAL</div>
+          <div class="legend-row">
+            <span class="legend-swatch king-swatch" aria-hidden="true">♔</span>
+            <p><strong>KING</strong> — one clean hit ends the match.</p>
+          </div>
+          <div class="legend-row">
+            <span class="legend-swatch mirror-swatch" aria-hidden="true"></span>
+            <p><strong>MIRROR</strong> — the bright face reflects; the dark back shatters.</p>
+          </div>
+          <div class="legend-row">
+            <span class="legend-swatch emitter-swatch" aria-hidden="true"></span>
+            <p><strong>EMITTER</strong> — fires forward at the end of your turn.</p>
+          </div>
+          <div class="legend-rule">ONE MOVE <em>or</em> ONE ROTATION <span>→</span> FIRE</div>
+        </div>
+
+        <div class="panel-foot">
+          <span class="panel-hint">Move one tile in any direction. Occupied tiles stop movement; pieces stop the beam.</span>
+        </div>
+      </aside>
+    </main>
+
+    <div id="menuOverlay" class="overlay">
+      <div class="menu-card">
+        <div class="eyebrow"><span class="eyebrow-line"></span>LOCAL 2P · TURN-BASED</div>
+        <h1 class="title"><span class="title-red">LASER</span> <span class="title-blue">CHESS</span></h1>
+        <p class="tagline">Bend the light. Break the king.</p>
+
+        <div class="rule-strip">
+          <div><b>01</b><span>MOVE<br>one tile</span></div>
+          <div><b>02</b><span>ROTATE<br>90°</span></div>
+          <div><b>03</b><span>FIRE<br>the beam</span></div>
+        </div>
+
+        <p class="menu-copy">Each turn gives you <strong>one action</strong> — move or rotate — followed by <strong>one shot</strong>. Angle your mirrors, dodge the beam, and burn the enemy king.</p>
+
+        <button id="playBtn" class="btn primary play-btn" aria-label="PLAY">PLAY</button>
+
+        <div class="menu-foot">
+          <span><span class="chip red-chip"></span>RED STARTS</span>
+          <span>CLICK A PIECE · <kbd>R</kbd> ROTATE · <kbd>F</kbd> FIRE</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" class="overlay" hidden>
+      <div class="gameover-card">
+        <div class="eyebrow"><span class="eyebrow-line"></span>MATCH COMPLETE</div>
+        <div id="winnerEmblem" class="winner-emblem" aria-hidden="true">♔</div>
+        <h2 id="winnerTitle" class="winner-title">RED WINS</h2>
+        <p id="winnerSub" class="winner-sub">The blue king was consumed by the beam.</p>
+        <div class="button-row">
+          <button id="playAgainBtn" class="btn primary" aria-label="PLAY AGAIN">PLAY AGAIN</button>
+          <button id="menuFromGameOverBtn" class="btn secondary" aria-label="MENU">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
